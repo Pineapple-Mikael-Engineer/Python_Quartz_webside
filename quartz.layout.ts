@@ -1,5 +1,20 @@
 import { PageLayout, SharedLayout } from "./quartz/cfg"
 import * as Component from "./quartz/components"
+import { FileTrieNode } from "./quartz/util/fileTrie"
+
+// Recorta el nombre que muestra el Explorer (arbol lateral) en el primer
+// separador de guion rodeado de espacios: em-dash "—", en-dash "–" o guion "-".
+// Asi "np.reshape — Cambiar forma del array" se ve como "np.reshape".
+// Es PURAMENTE VISUAL: muta node.displayName (un override del trie del Explorer),
+// no toca el frontmatter `title`, por lo que el H1, la pestaña, la busqueda,
+// los popovers y el og:title siguen mostrando el title completo.
+// Si el nombre no tiene separador, split() devuelve el nombre completo intacto,
+// asi que carpetas y notas sin " — " quedan igual.
+// Nota: esta funcion se serializa con .toString() y se ejecuta en el navegador,
+// por eso es autocontenida (no referencia nada externo).
+const explorerTrimDash = (node: FileTrieNode) => {
+  node.displayName = node.displayName.split(/\s[—–-]\s/)[0].trim()
+}
 
 // components shared across all pages
 export const sharedPageComponents: SharedLayout = {
@@ -38,7 +53,7 @@ export const defaultContentPageLayout: PageLayout = {
         { Component: Component.ReaderMode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({ mapFn: explorerTrimDash }),
   ],
   right: [
     Component.Graph(),
@@ -62,7 +77,7 @@ export const defaultListPageLayout: PageLayout = {
         { Component: Component.Darkmode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({ mapFn: explorerTrimDash }),
   ],
   right: [],
 }
